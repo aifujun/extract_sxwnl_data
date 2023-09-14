@@ -5,21 +5,15 @@ from itertools import takewhile, repeat
 from os import PathLike
 from typing import TextIO
 
+BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+
 
 class Comment:
     author = "aifujun 14149812@qq.com"
 
-    lunar_data_file_start = ("/**\n"
-                             " * @file        {filename}\n"
-                             " * @brief       农历数据\n"
-                             " * @details     农历相关数据文件, 由脚本直接生成, 请勿直接修改, 否则可能会导致错误\n"
-                             " * @author      aifujun 14149812@qq.com\n"
-                             " * @date        {create_time}\n"
-                             " * @copyright   Copyright © 2025 Aifujun, All Rights Reserved.\n"
-                             "**/\n"
-                             "\n"
-                             "#ifndef _LUNAR_DATA_H_\n"
-                             "#define _LUNAR_DATA_H_\n\n")
+    lunar_data_file_start = (
+        "#ifndef _LUNAR_DATA_H_\n"
+        "#define _LUNAR_DATA_H_\n\n")
 
     lunar_data_file_end = "#endif  //_LUNAR_DATA_H_\n"
 
@@ -42,21 +36,59 @@ class Comment:
                   " *      n表示农历正月初一的公历日期的年内序数(元旦1月1号序数为1, 前一年12月31号序数为-1)\n"
                   " */\n")
 
-    lunar_data_bc723 = "10个月, 无十一月和十二月"
+    lunar_data_note = (
+        "/**\n"
+        " * @file        {filename}\n"
+        " * @brief       农历数据\n"
+        " * @details     农历相关数据文件, 由脚本直接生成, 请勿直接修改, 否则可能会导致错误\n"
+        " * @author      aifujun 14149812@qq.com\n"
+        " * @date        {create_time}\n"
+        " * @copyright   Copyright © 2025 Aifujun, All Rights Reserved.\n"
+        "**/\n"
+        "\n"
+        "/**********************************************************************************************\n"
+        " * 1) 公元前723年, 10个月, 无十一月和十二月\n"
+        " * 2) 春秋历(公元前722年 – 前481年)没有固定的置闰法则，正月的月建并不固定，"
+        "而是在建亥(即现在的十月)与建寅(现在的正月)之间摆动。\n"
+        " *    春秋初期的正月月建多在建丑(现在的十二月)，末期则多在建子(现在的十一月)。"
+        "目前学界对于春秋历的闰月的位置末有一致意见。\n"
+        " * 3) 战国时代(约公元前480年 - 前222年)各国施行不同历法，当时使用的历法有六种:周历、鲁历、殷历、夏历、"
+        "黄帝历和颛顼历，合称「古六历」。\n"
+        " *    六种历法的计算方法大致相同，但各历的年首不尽相同，用以计算历法的历元也不同。\n"
+        " * 4) 对春秋战国时期(公元前722年 – 前222年), 这里假设闰月置于年终，不注明闰几月。\n"
+        " * 5) 秦朝及汉初(公元前221年 – 前104年)的历法沿用颛顼历的月序。"
+        "颛顼历是古六历之一，据说战国后期在秦国使用。\n"
+        " *    颛顼历以建亥(即今天的十月)为年首，但仍称建亥为十月。"
+        "月的数序是十月、十一月、十二月、正月、二月……九月，闰月置于年终，称为后九月。\n"
+        " * 6) 公元9年，王莽建立新朝，改正朔以殷正建丑(即现在的十二月)为年首，故公元8年的农历年(戊辰年)只有十一个月。\n"
+        " *    农历月的数序是:建丑为正月、建寅为二月等等，与现在通用的月序相差一个月。"
+        "新朝于地皇四年(癸未年，公元23年)亡，\n"
+        " *    绿林军拥立汉淮南王刘玄为帝，改元更始元年，恢复以建寅(即现在的正月)为年首。地皇四年和更始元年有十一个月重叠。\n"
+        " *    地皇四年用丑正、更始元年用寅正，所以地皇四年二至十二月相当于更始元年正至十一月。\n"
+        " * 7) 魏青龙五年（丁巳年，公元237年），魏明帝改正朔，以殷正建丑(即现在的十二月)为年首，二月后实施，并改元景初元年。\n"
+        " *    所以丁巳年没有三月份，二月后的月份是四月。农历月的数序是:建丑为正月、建寅为二月等等，与现在通用的月序相差一个月。\n"
+        " *    景初三年（公元239年）明帝驾崩,次年恢复以建寅(即现在的正月)为年首。景初三年有两个十二月。\n"
+        " * 8) 公元689年12月，武则天改正朔，以周正建子(即现在的十一月)为年首，建子改称正月，建寅（即现在的正月）改称一月，\n"
+        " *    其他农历月的数序不变（即正月、十二月、一月、二月__十月）。公元701年2月又改回以建寅为年首。\n"
+        " *    公元689年的农历年(己丑年)只有十一个月(其中一个月是闰月)，而公元700年的农历年(庚子年)有十五个月(其中一个月是闰月)\n"
+        " * 9) 公元761年12月，唐肃宗改正朔，以周正建子(即现在的十一月)为年首，建子改称正月、建丑（即现在的十二月）改称二月、\n"
+        " *    建寅（即现在的正月）改称三月等等，与现在通用的月序相差二个月。公元762年4月又把农历月的数序改回以建寅为正月、建卯为二月等。\n"
+        " *    公元761年的农历年（辛丑年）只有十个月, 而公元762年的农历年（壬寅年）则有十四个月，其中有两个四月和两个五月。\n"
+        " **********************************************************************************************/\n\n\n")
+
+    lunar_data_bc723 = "公元前723年, 10个月, 无十一月和十二月"
 
     spring_autumn_leap_month = ("有13个月, 春秋历(公元前722年 – 前481年)没有固定的置闰法则，正月的月建并不固定，"
                                 "而是在建亥(即现在的十月)与建寅(现在的正月)之间摆动。"
                                 "春秋初期的正月月建多在建丑(现在的十二月)，末期则多在建子(现在的十一月)。"
-                                "目前学界对于春秋历的闰月的位置末有一致意见。这里假设闰月置于年终，不用注明闰几月")
+                                "目前学界对于春秋历的闰月的位置末有一致意见。这里假设闰月置于年终，不注明闰几月")
+
+    lunar_year_bc222 = ("战国时代(约前480年至前222年)各国施行不同历法，"
+                        "当时使用的历法有六种:周历、鲁历、殷历、夏历、黄帝历和颛顼历，合称「古六历」。")
 
     qin_leap_month = ("13个月(后九月), 秦朝及汉初(公元前221年 – 前104年)的历法沿用颛顼历的月序。"
                       "颛顼历是古六历之一，据说战国后期在秦国使用。颛顼历以建亥(即今天的十月)为年首，但仍称建亥为十月。"
                       "月的数序是十月、十一月、十二月、正月、二月……九月，闰月置于年终，称为后九月。")
-
-    lunar_data_bc718 = "13个月"
-
-    lunar_year_bc222 = ("战国时代(约前480年至前222年)各国施行不同历法，"
-                        "当时使用的历法有六种:周历、鲁历、殷历、夏历、黄帝历和颛顼历，合称「古六历」。")
 
     lunar_year_8_23 = ("公元9年，王莽建立新朝，改正朔以殷正建丑(即现在的十二月)为年首，故公元8年的农历年(戊辰年)只有十一个月。"
                        "农历月的数序是:建丑为正月、建寅为二月等等，与现在通用的月序相差一个月。"
@@ -92,6 +124,8 @@ class DataExtractor:
         "闰十月大", "闰冬月大", "闰腊月大",
         "闰正月大", "闰二月小", "闰三月小", "闰四月小", "闰五月小", "闰六月小", "闰七月小", "闰八月小", "闰九月小",
         "闰十月小", "闰冬月小", "闰腊月小",
+
+        "拾贰大", "拾贰小", "十三小", "十三大", "后九小", "后九大", "一月小", "一月大"
     ]
 
     # 春秋战国时期(公元前722年 – 前222年)
@@ -126,12 +160,12 @@ class DataExtractor:
     ]
 
     def __init__(self,
-                 _source: str | PathLike[str] = "./data/lunar_data.txt",
-                 _dest: str | PathLike[str] = "./data/lunar_data.h"):
+                 _source: str | PathLike[str] = os.sep.join([BASE_DIR, "data/lunar_data.txt"]),
+                 _dest: str | PathLike[str] = os.sep.join([BASE_DIR, "data/lunar_data.h"])):
         self.source = _source
         self.dest = _dest
-        self.cleaned_data_file = "./data/cleaned_data.txt"
-        self.compress_data_file = "./data/compress_data.txt"
+        self.cleaned_data_file = os.sep.join([BASE_DIR, "data/cleaned_data.txt"])
+        self.compress_data_file = os.sep.join([BASE_DIR, "data/compress_data.txt"])
         self._start_year = -4713
         self._end_year = 9999
 
@@ -218,68 +252,26 @@ class DataExtractor:
             return False
 
         if len(month_data) > 13 or len(month_data) < 12:
-            if year == -723 and len(month_data) == 10:
-                print(f"year: {year}\n    {Comment.lunar_data_bc723}")
+            if len(month_data) == 10 and (year == -723 or year == 761):
                 return True
-            elif year == -222 and len(month_data) == 14:
-                print(f"year: {year}\n    {Comment.lunar_year_bc222}")
+            elif len(month_data) == 11 and (year == 237 or year == 689):
                 return True
-            elif year == 237 and len(month_data) == 11:
-                print(f"year: {year}\n    {Comment.lunar_year_237_239}")
+            elif len(month_data) == 14 and (year == -222 or year == 762):
                 return True
-            elif year == 689 and len(month_data) == 11:
-                print(f"year: {year}\n    {Comment.lunar_year_689_700}")
-                return True
-            elif year == 700 and len(month_data) == 15:
-                print(f"year: {year}\n    {Comment.lunar_year_689_700}")
-                return True
-            elif year == 761 and len(month_data) == 10:
-                print(f"year: {year}\n    {Comment.lunar_year_761_762}")
-                return True
-            elif year == 762 and len(month_data) == 14:
-                print(f"year: {year}\n    {Comment.lunar_year_761_762}")
+            elif len(month_data) == 15 and year == 700:
                 return True
             else:
                 raise ValueError(f"year: {year}, data: {month_data} is out of range.")
         elif (len(month_data) == 12 and leap_month != 0) or (len(month_data) == 13 and leap_month == 0):
-            if year in self.spring_autumn_leap_year and len(month_data) == 13:
-                print(f"year: {year}\n    {Comment.spring_autumn_leap_month}")
-                return True
-            if year in self.qin_leap_year and len(month_data) == 13:
-                print(f"year: {year}\n    {Comment.qin_leap_month}")
+            if len(month_data) == 13 and (year in self.spring_autumn_leap_year
+                                          or year in self.qin_leap_year
+                                          or year == 23 or year == 239):
                 return True
             if year == 8 and len(month_data) == 12:
-                print(f"year: {year}\n    {Comment.lunar_year_8_23}")
-                return True
-            if year == 23 and len(month_data) == 13:
-                print(f"year: {year}\n    {Comment.lunar_year_8_23}")
-                return True
-            if year == 239 and len(month_data) == 13:
-                print(f"year: {year}\n    {Comment.lunar_year_237_239}")
                 return True
             raise ValueError(f"year: {year}, data: {month_data} is error.")
 
         return True
-
-    def _compress_month_info(self, year, leap_month, month_info: str) -> str:
-        if month_info in self.month_info:
-            return "1" if month_info.endswith("大") else "0"
-        elif month_info in ["拾贰大", "拾贰小"]:
-            if year == 23:
-                print(f"year: {year}\n    {Comment.lunar_year_8_23}")
-            elif year == 239:
-                print(f"year: {year}\n    {Comment.lunar_year_237_239}")
-            else:
-                raise ValueError(f"year: {year}, data is error.")
-            return "1" if month_info.endswith("大") else "0"
-        elif month_info in ["十三小", "十三大"] and leap_month == 0:
-            return "1" if month_info.endswith("大") else "0"
-        elif month_info in ["后九小", "后九大"] and leap_month == 0:
-            return "1" if month_info.endswith("大") else "0"
-        elif month_info in ["一月小", "一月大"] and 689 < year < 701:
-            return "1" if month_info.endswith("大") else "0"
-        else:
-            raise ValueError(f"{month_info} is not expected.")
 
     def initialize(self):
         self.data_cleaning()
@@ -317,8 +309,10 @@ class DataExtractor:
                     chunjie_date = line.split()[1]
                     month_data += "1" if mon_info.endswith("大") else "0"
                     continue
+                elif mon_info not in self.month_info:
+                    raise ValueError(f"{mon_info} is not expected.")
 
-                month_data += self._compress_month_info(year, leap_month, mon_info)
+                month_data += "1" if mon_info.endswith("大") else "0"
 
     def compress_data(self) -> None:
         """将清理的数据压缩"""
@@ -370,9 +364,10 @@ class DataExtractor:
 
         with (open(self.compress_data_file, "r", encoding="utf-8") as stream,
               open(self.dest, "w+", encoding="utf-8") as out):
-            out.write(Comment.lunar_data_file_start.format(filename=os.path.basename(self.dest),
-                                                           create_time=self.get_current_time()))
-            out.write(f"#define START_YEAR  ({start_year})\n#define END_YEAR    ({end_year})\n\n")
+            out.write(Comment.lunar_data_note
+                      .format(filename=os.path.basename(self.dest), create_time=self.get_current_time()))
+            out.write(Comment.lunar_data_file_start)
+            out.write(f"#define START_YEAR  ({start_year})\n#define END_YEAR    ({end_year})\n\n\n")
 
             tmp_data_bc = []
             tmp_data_ad = []

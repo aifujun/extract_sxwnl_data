@@ -1,5 +1,5 @@
 
-from extract_data import DataExtractor
+from src.extract_data import DataExtractor
 
 
 def test():
