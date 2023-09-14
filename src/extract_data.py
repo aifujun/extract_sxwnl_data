@@ -12,10 +12,33 @@ class Comment:
     author = "aifujun 14149812@qq.com"
 
     lunar_data_file_start = (
-        "#ifndef _LUNAR_DATA_H_\n"
-        "#define _LUNAR_DATA_H_\n\n")
+        "#ifndef LUNAR_DATA_H_\n"
+        "#define LUNAR_DATA_H_\n\n"
+        "#define START_YEAR\t({start_year})\t\t/*!< 定义数据起始年份 */\n"
+        "#define END_YEAR\t({end_year})\t\t/*!< 定义数据起始年份 */\n\n\n")
 
-    lunar_data_file_end = "#endif  //_LUNAR_DATA_H_\n"
+    lunar_data_file_end = "#endif  //LUNAR_DATA_H_\n"
+
+    special_month_info = (
+        '/* 特殊年历大小月信息(索引0为年份, 后面依次为月份信息) */\n'
+        'unsigned char SPECIAL_MONTH[10][16][16] = {\n'
+        '    {"-723", "正月小", "二月大", "三月大", "四月小", "五月大", "六月小", "七月大", "八月小", "九月大", "十月小", "", "", "", "", ""},\n'
+        '    {"761", "正月小", "二月大", "三月小", "四月大", "五月小", "六月小", "七月大", "八月小", "九月大", "十月大", "", "", "", "", ""},\n'
+        '    {"237", "正月大", "二月小", "",  "四月大", "五月大", "六月小", "七月大", "八月小", "九月大", "十月小", "十一大", "十二小", "", "", ""},\n'
+        '    {"689", "正月小", "二月大", "三月小", "四月小", "五月大", "六月小", "七月大", "八月小", "九月大", "闰九月大", "十月大", "", "", "", ""},\n'
+        '    {"-222", "正月大", "二月大", "三月小", "四月大", "五月小", "六月大", "七月小", '
+        '"八月大", "九月小", "十月大", "十一大", "十月小", "十一大", "十二小", ""},\n'
+        '    {"762", "正月小", "二月大", "三月大", "四月小", "五月大", "四月小", "五月大", '
+        '"六月小", "七月小", "八月大", "九月小", "十月大", "十一小", "十二大", ""},\n'
+        '    {"700", "正月大", "十二大", "一月大", "二月小", "三月大", "四月小", "五月小", '
+        '"六月大", "七月小", "闰七月小", "八月大", "九月小", "十月大", "十一大", "十二大"},\n'
+        '    {"8", "正月小", "闰正月大", "二月大", "三月小", "四月大", "五月小", "六月大", '
+        '"七月小", "八月大", "九月小", "十月大", "十一小", "", "", ""},\n'
+        '    {"23", "正月大", "二月小", "三月大", "四月小", "五月大", "六月小", "七月大", '
+        '"八月小", "九月大", "十月小", "十一大", "十二小", "十二大", "", ""},\n'
+        '    {"239", "正月大", "二月小", "三月大", "四月小", "五月大", "六月小", "七月大", '
+        '"八月小", "九月大", "十月小", "十一大", "十二大", "十二小", "", ""}\n'
+        '};\n\n\n')
 
     lunar_data = ("/**\n"
                   " * 农历月份信息。一年用4个字节(unsigned int)表示\n"
@@ -161,7 +184,7 @@ class DataExtractor:
 
     def __init__(self,
                  _source: str | PathLike[str] = os.sep.join([BASE_DIR, "data/lunar_data.txt"]),
-                 _dest: str | PathLike[str] = os.sep.join([BASE_DIR, "data/lunar_data.h"])):
+                 _dest: str | PathLike[str] = os.sep.join([BASE_DIR, "export/lunar_data.h"])):
         self.source = _source
         self.dest = _dest
         self.cleaned_data_file = os.sep.join([BASE_DIR, "data/cleaned_data.txt"])
@@ -231,7 +254,7 @@ class DataExtractor:
                 out_io.write(f"    {value}, ")
                 pos += 1
             elif pos == (column_nums - 1):
-                out_io.write(f"{value},         /*!< {start:>5d} -> {start - pos if reverse else start + pos:>5d} */\n")
+                out_io.write(f"{value},\t\t\t/*!< {start:>5d} -> {start - pos if reverse else start + pos:>5d} */\n")
                 start += -column_nums if reverse else column_nums
                 pos = 0
             else:
@@ -242,7 +265,8 @@ class DataExtractor:
             out_io.write("};\n\n")
         else:
             end = start - pos + 1 if reverse else start + pos - 1
-            out_io.write(f"{'    ' * (column_nums - pos) * 3}        /*!< {start:>5d} -> {end:>5d} */\n}};\n\n")
+            tab = '\t' * (column_nums - pos) * 3
+            out_io.write(f"{tab}\t\t/*!< {start:>5d} -> {end:>5d} */\n}};\n\n")
 
     def _inspect_month_data(self, year, leap_month, month_data) -> bool:
         if year < self._start_year - 1 or year > self._end_year or year == 0:
@@ -263,11 +287,9 @@ class DataExtractor:
             else:
                 raise ValueError(f"year: {year}, data: {month_data} is out of range.")
         elif (len(month_data) == 12 and leap_month != 0) or (len(month_data) == 13 and leap_month == 0):
-            if len(month_data) == 13 and (year in self.spring_autumn_leap_year
-                                          or year in self.qin_leap_year
-                                          or year == 23 or year == 239):
+            if len(month_data) == 13 and (year == 23 or year == 239):
                 return True
-            if year == 8 and len(month_data) == 12:
+            if len(month_data) == 12 and year == 8:
                 return True
             raise ValueError(f"year: {year}, data: {month_data} is error.")
 
@@ -293,6 +315,14 @@ class DataExtractor:
 
                 if mon_info.startswith("闰"):
                     leap_month = self.month_name.index(list(mon_info)[1])
+                if year in self.spring_autumn_leap_year:
+                    # 目前学界对于春秋历的闰月的位置末有一致意见。这里假设闰月置于年终，不注明闰几月
+                    # Comment.spring_autumn_leap_month
+                    leap_month = 12
+                if year in self.qin_leap_year:
+                    # 颛顼历以建亥(即今天的十月)为年首，但仍称建亥为十月.闰月置于年终，称为后九月。
+                    # Comment.qin_leap_month
+                    leap_month = 9
 
                 if mon_info in ["正月小", "正月大"]:
                     # print(year, leap_month, month_data)
@@ -366,8 +396,8 @@ class DataExtractor:
               open(self.dest, "w+", encoding="utf-8") as out):
             out.write(Comment.lunar_data_note
                       .format(filename=os.path.basename(self.dest), create_time=self.get_current_time()))
-            out.write(Comment.lunar_data_file_start)
-            out.write(f"#define START_YEAR  ({start_year})\n#define END_YEAR    ({end_year})\n\n\n")
+            out.write(Comment.lunar_data_file_start.format(start_year=start_year, end_year=end_year))
+            out.write(Comment.special_month_info)
 
             tmp_data_bc = []
             tmp_data_ad = []
