@@ -3,12 +3,15 @@
  * @brief       农历数据
  * @details     农历相关数据文件, 由脚本直接生成, 请勿直接修改, 否则可能会导致错误
  * @author      aifujun 14149812@qq.com
- * @date        2023-09-14 15:03:06
+ * @date        2023-09-14 16:39:03
  * @copyright   Copyright © 2025 Aifujun, All Rights Reserved.
 **/
 
 #ifndef _LUNAR_DATA_H_
 #define _LUNAR_DATA_H_
+
+#define START_YEAR  (-4713)
+#define END_YEAR    (9999)
 
 /**
  * 农历月份信息。一年用4个字节(unsigned int)表示
@@ -28,7 +31,7 @@
  *   4）正月初一的年内序数需将[23,17]位转为十进制<n>; 高位[24位]为1则表示n为负数, 为0表示n为正数.
  *      n表示农历正月初一的公历日期的年内序数(元旦1月1号序数为1, 前一年12月31号序数为-1)
  */
-unsigned int const LUNAR_DATA_BC[4713] = {
+unsigned int const LUNAR_DATA_BC[4714] = {
     0x00000000, 0x006E055A, 0x00497555, 0x005E0AAA, 0x003876AA, 0x004E0AB5, 0x00640555, 0x003EF555,         /*!<     0 ->    -7 */
     0x005406AA, 0x006A0AB5, 0x00454AAD, 0x005A0555, 0x00342D55, 0x004C056A, 0x00600AAD, 0x003CAAAA,         /*!<    -8 ->   -15 */
     0x00500D55, 0x006805AA, 0x0043355A, 0x00580AAA, 0x006C0D55, 0x00498B55, 0x005E055A, 0x00387556,         /*!<   -16 ->   -23 */
@@ -639,7 +642,7 @@ unsigned int const LUNAR_DATA_BC[4713] = {
  *   4）正月初一的年内序数需将[23,17]位转为十进制<n>; 高位[24位]为1则表示n为负数, 为0表示n为正数.
  *      n表示农历正月初一的公历日期的年内序数(元旦1月1号序数为1, 前一年12月31号序数为-1)
  */
-unsigned int const LUNAR_DATA_AD[9999] = {
+unsigned int const LUNAR_DATA_AD[10000] = {
     0x00000000, 0x00560AD5, 0x00431AAA, 0x00680AAA, 0x0052055A, 0x003AAAD5, 0x00600D55, 0x004C0AAA,         /*!<     0 ->     7 */
     0x00362556, 0x001E0AD5, 0x000B5AAA, 0x00300AAA, 0x001A0556, 0x00030AD5, 0x00280B55, 0x00140AAA,         /*!<     8 ->    15 */
     0x0104B556, 0x0022056A, 0x000C0B55, 0x010A2AAA, 0x001C0AAB, 0x0007355A, 0x002C05AA, 0x00161555,         /*!<    16 ->    23 */
