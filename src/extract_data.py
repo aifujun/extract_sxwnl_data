@@ -16,7 +16,7 @@ class Comment:
         "#define LUNAR_DATA_H_\n\n"
         "#define START_YEAR		({start_year})			/*!< 定义数据起始年份 */\n"
         "#define END_YEAR		({end_year})			/*!< 定义数据结束年份 */\n"
-        "#define MINUS_MASK		(0x800000)		/*!< 农历新年序数正负掩码 */\n"
+        "#define MINUS_MASK		(0x1000000)		/*!< 农历新年序数正负掩码 */\n"
         "#define ORDINAL_MASK	(0xFE0000)		/*!< 农历新年序数掩码 */\n"
         "#define LEAP_MON_MASK	(0x1E000)		/*!< 闰月数据掩码 */\n"
         "#define MON_INFO_MASK	(0x1FFF)		/*!< 月份大小月信息掩码 */\n\n\n")
@@ -202,15 +202,18 @@ class DataExtractor:
         :return:
         """
         # 对于大数值年份，能整除3200且能整除172800为闰年
-        if (year % 3200 == 0) and (year % 172800 == 0):
+        if (year < 0) and (abs(year) % 4 == 1):
             return 1
 
         # 世纪年能被400整除的是闰年
-        if year % 400 == 0:
+        if (year > 0) and (year <= 1582) and (year % 4 == 0):
             return 1
 
         # 普通年能被4整除且不能被100整除的为闰年
-        if (year % 4 == 0) and (year % 100 != 0):
+        if (year > 1582) and (
+                (year % 4 == 0 and year % 100 != 0)
+                or (year % 400 == 0 and year % 3200 != 0)
+                or (year % 172800 == 0)):
             return 1
 
         return 0
